@@ -6,6 +6,7 @@ import os
 document_root = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-2])
 
 logfile_folder = os.path.join(document_root,"logfiles")
+script_logfile_folder = os.path.join(logfile_folder,"script_logfiles")
 processed_runs_folder = os.path.join(logfile_folder,"processed_runs")
 manifest_folder = os.path.join(logfile_folder,"manifest_files")
 
@@ -17,9 +18,9 @@ with open(nexus_api_key_file, "r") as nexus_api:
 # archerdx VM login
 path_to_archerdx_pw = "{document_root}/.archerVM_pw".format(document_root=document_root)
 
-download_location = "~/"
+download_location = os.path.join(document_root,"dx_downloads")
 fastq_folder_path = "Data/Intensities/BaseCalls"
-path_to_watch_folder = "/watched/aledjones\@nhs.net/test1"
+path_to_watch_folder = "/watched/aledjones\@nhs.net/FusionPlexPanSolidTumorv1_0" #folder made by RLH 20210622
 source_command = " source /usr/local/src/mokaguys/apps/dx-toolkit/environment"
 
 success_statement = "all fastqs downloaded, transferred to server and deleted ok"

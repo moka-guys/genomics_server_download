@@ -20,7 +20,7 @@ class Archerdx():
 		This command is executed and a tuple is returned in format(projectid, projectname)
 		"""
 		# build command including the source cmd (activate the sdk)
-		cmd = config.source_command+";dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
+		cmd = config.source_command+";dx find projects --created-after=-12d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
 		self.logger("Archer download script %s started on genomics server. Checking for new ArcherDX projects. Command: %s" % (git_tag.git_tag(), cmd), "Archer list projects")
 		out, err = self.execute_subprocess_command(cmd)
 		# list of projects- loop through to yield the projectid and projectname as "project"
@@ -202,12 +202,17 @@ class Archerdx():
 			config.Nexus_API_Key)
 		self.logger("Download fastqs using dxda command: %s" % cmd, "Archer download fastqs")
 		out, err = self.execute_subprocess_command(cmd)
-		self.logger("Fastq files for project %s downloaded to %s" % (project[1], config.download_location), "Archer download fastqs")
 		# pass stderr to error checking function which looks for expected error related strings at this stage and stdout to the success checking function
 		if not self.errors_in_stderr(err, "download") and self.success_in_stdout(out,"Download completed successfully"):
+			self.logger("Fastq files for project %s downloaded to %s" % (project[1], config.download_location), "Archer download fastqs")
 			# check the integrity of the downloads
 			if self.inspect_download(project):
 				return True
+		# if any errors thrown by the download fastqs function:
+		else:
+			# Rapid7 alert set:
+			self.logger("ERROR: download FASTQ stderr: %s. \nCheck this error and restart download. See log for list of fastq files expected.\n" % (err), "Archer download fastqs")
+			return False
 
 	def inspect_download(self,project):
 		"""

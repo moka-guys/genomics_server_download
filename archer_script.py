@@ -20,7 +20,7 @@ class Archerdx():
 		This command is executed and a tuple is returned in format(projectid, projectname)
 		"""
 		# build command including the source cmd (activate the sdk)
-		cmd = config.source_command+";dx find projects --created-after=-12d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
+		cmd = config.source_command+";dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
 		self.logger("Archer download script %s started on genomics server. Checking for new ArcherDX projects. Command: %s" % (git_tag.git_tag(), cmd), "Archer list projects")
 		out, err = self.execute_subprocess_command(cmd)
 		# list of projects- loop through to yield the projectid and projectname as "project"

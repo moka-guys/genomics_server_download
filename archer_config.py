@@ -27,6 +27,6 @@ success_statement = "all fastqs downloaded, transferred to server and deleted ok
 
 export_environment = "export DX_API_TOKEN=%s" % Nexus_API_Key
 
-path_to_manifest_script = os.path.join(document_root,"apps/dxda/scripts","create_manifest.py")
-path_to_filter_manifest_script = os.path.join(document_root,"apps/dxda/scripts","filter_manifest.py")
-path_to_dx_download_client = os.path.join(document_root,"apps","dx-download-agent-linux")
+path_to_manifest_script = os.path.join(document_root,"apps/dxda_0.5.7/dxda/scripts","create_manifest.py")
+path_to_filter_manifest_script = os.path.join(document_root,"apps/dxda_0.5.7/dxda/scripts","filter_manifest.py")
+path_to_dx_download_client = os.path.join(document_root,"apps","dxda_0.5.7","dx-download-agent-linux")

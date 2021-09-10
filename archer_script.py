@@ -131,7 +131,7 @@ class Archerdx():
 		manifest_filename = os.path.join(config.manifest_folder,"%s.json.bz2 " % (project[0]))
 		# create cmd for dxda script to create manifest (create_manifest.py)
 		# take the path to the generate manifest file dxda script (see config) and the projectID, return the manifest file json
-		cmd = "python %s %s --recursive --outfile %s" % (
+		cmd = "python %s %s --recursive -o %s" % (
 			config.path_to_manifest_script, 
 			project[0], 
 			manifest_filename
@@ -143,7 +143,7 @@ class Archerdx():
 			return True
 		else:
 			# Rapid7 alert set:
-			self.logger("ERROR: Failed to create manifest file (unfiltered) %s" % manifest_filename, "Archer create manifest file")
+			self.logger("ERROR: Failed to create manifest file (unfiltered) %s. cmd = %s" % (manifest_filename,cmd), "Archer create manifest file")
 			return False
 	
 	def create_filtered_manifest_file(self,project):
@@ -165,7 +165,7 @@ class Archerdx():
 		# create cmd for dxda script to filter manifest (create_manifest.py for fastqs)
 		# take the path to the filter manifest file dxda script (see config), the path of the unfiltered manifest file and the projectID 
 		# return the filtered manifest file json
-		cmd = "python %s %s --output_file %s '(.*)_001.fastq.gz'" % (
+		cmd = "python %s %s -o %s '(.*)_001.fastq.gz'" % (
 			config.path_to_filter_manifest_script, 
 			os.path.join(config.manifest_folder, "%s.json.bz2" % (project[0])),
 			filtered_manifest_filename
@@ -177,7 +177,7 @@ class Archerdx():
 			return True
 		else:
 			#Rapid7 alert set:
-			self.logger("ERROR: Failed to create manifest file (filtered) %s" % filtered_manifest_filename, "Archer create filtered manifest file")
+			self.logger("ERROR: Failed to create manifest file (filtered) %s. cmd = %s" % (filtered_manifest_filename, cmd), "Archer create filtered manifest file")
 			return False
 			
 	def download_using_manifest_file(self,project):
@@ -361,7 +361,7 @@ class Archerdx():
 		path_to_downloaded_files = os.path.join(config.download_location, project[1].replace("003_","").replace("002_",""))
 		# command to delete the downloaded fastq files
 		cmd = "rm -r %s; echo $?" % (path_to_downloaded_files)
-		self.logger("Command to delete project %s downloaded files (%s)" % (project[1], path_to_downloaded_files), "Archer Cleanup")
+		self.logger("Delete project %s downloaded files (%s). cmd = %s" % (project[1], path_to_downloaded_files, cmd), "Archer Cleanup")
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out, "0"):
 			self.logger("Runfolder for project %s deleted successfully from genomics server" % project[1], "Archer Cleanup")

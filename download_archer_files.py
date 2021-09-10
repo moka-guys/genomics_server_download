@@ -459,12 +459,13 @@ class Archerdx():
 				if self.create_filtered_manifest_file(project):
 					# download the fastq files for the project
 					if self.download_using_manifest_file(project):
-						# transfer the fastq files to the Archer Analysis
-						if self.organise_file_transfer(project, fastq_files_list):
-							# delete the copy of the fastq files from the genomics server
-							if self.cleanup(project):
-								# create the file to prevent the project being processed again
-								self.create_file_to_stop_subsequent_processing(project)
+						pass
+						# # transfer the fastq files to the Archer Analysis
+						# if self.organise_file_transfer(project, fastq_files_list):
+						# 	# delete the copy of the fastq files from the genomics server
+						# 	if self.cleanup(project):
+						# 		# create the file to prevent the project being processed again
+						# 		self.create_file_to_stop_subsequent_processing(project)
 	
 
 if __name__ == "__main__":

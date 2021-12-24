@@ -19,8 +19,13 @@ class Archerdx():
 		This list is filtered to only include those created in the last 7 days and with the expected string (ADX) in the project name 
 		This command is executed and a tuple is returned in format(projectid, projectname)
 		"""
-		# build command including the source cmd (activate the sdk)
-		cmd = config.source_command+";dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
+		# if testing name a specific folder to use (disregarding the timeframe)
+		if config.testing:
+			# build command including the source cmd (activate the sdk)
+			cmd = config.source_command+";dx find projects --name=003_211223_genomics_server_download_test_ADX999 --auth-token %s" % (config.Nexus_API_Key)
+		else:	
+			# build command including the source cmd (activate the sdk)
+			cmd = config.source_command+";dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
 		self.logger("Archer download script %s started on genomics server. Checking for new ArcherDX projects. Command: %s" % (git_tag.git_tag(), cmd), "Archer list projects")
 		out, err = self.execute_subprocess_command(cmd)
 		# list of projects- loop through to yield the projectid and projectname as "project"
@@ -45,8 +50,12 @@ class Archerdx():
 		expected_filename = "%s.txt" % (project[1])
 		if expected_filename in os.listdir(config.processed_runs_folder):
 			if self.check_if_completed_ok(expected_filename):
-				self.logger("Archer project %s previously actioned and completed ok." % project[1], "Archer check previously actioned")
-				return True
+				if config.testing:
+					self.logger("Archer project %s previously actioned and completed ok but testing = true so continuing." % project[1], "Archer check previously actioned")
+					return False
+				else:
+					self.logger("Archer project %s previously actioned and completed ok." % project[1], "Archer check previously actioned")
+					return True
 			else:
 				self.logger("WARNING: Archer project %s previously actioned but NOT completed ok. Will attempt reprocessing." % project[1], "Archer check previously actioned")
 				return False
@@ -127,6 +136,17 @@ class Archerdx():
 		"""
 		# dx login required for dxda scripts
 		self.dx_login()
+		# if we're testing the script the download agent remembers that it has downloaded these previously so will not re-download them
+		# this causes the integrity checking step to fail.
+		# therefore we need to delete the contents of the manifest folder for this project
+		if config.testing:
+			self.logger("Testing run - if script is failing at this point you need to `chown $username logfiles/manifest_files/%s`" % project[0], "Test run step")
+			cmd = "rm %s; echo $?" % (os.path.join(config.manifest_folder,"%s*" % (project[0])))
+			out, err = self.execute_subprocess_command(cmd)
+			if self.success_in_stdout(out, "0"):
+				self.logger("Testing run - existing manifest files deleted for project %s" % project[0], "Test run step")
+			else:
+				self.logger("Testing run - existing manifest files NOT deleted for project %s" % project[0], "Test run step")
 
 		manifest_filename = os.path.join(config.manifest_folder,"%s.json.bz2 " % (project[0]))
 		# create cmd for dxda script to create manifest (create_manifest.py)
@@ -242,6 +262,31 @@ class Archerdx():
 			self.logger("ERROR: inspect download stderr: %s. Check this error and restart download. See log for list of fastq files expected." % err, "Archer Inspect Download")
 			return False
 
+	def set_up_ssh_known_hosts(self):
+		"""
+		Need to add the archer server host into the known hosts otherwise at the rsync stage there is an interactive prompt that the authenticity of the host cannot be established
+		Therefore we can run a command which tests if the server is in the known hosts list and if not it's added using ssh-keygen and ssh-keyscan
+		This is run once each time the docker image is run.
+		Returns True if host was added
+		"""
+		# make ~./ssh and ~/.ssh/known_hosts
+		# if the host is not present in this file
+		# use ssh-keyscan to get the key and add it in.
+		# repeat the ssh-keygen command - this should now return a string which includes "# Host grpvgaa01.viapath.local found" - stdout can be tested for this
+		# NB expect some outputs in stderr from the ssh-keyscan command at this stage
+		cmd="mkdir -p ~/.ssh; touch ~./ssh/known_hosts;\
+			if [ -z $(ssh-keygen -F grpvgaa01.viapath.local) ]; then \
+				ssh-keyscan -H grpvgaa01.viapath.local >> ~/.ssh/known_hosts; fi; ssh-keygen -F grpvgaa01.viapath.local"
+		out, err = self.execute_subprocess_command(cmd)
+		if self.success_in_stdout(out, "Host grpvgaa01.viapath.local found"):
+			self.logger("host added to known hosts ok", "SSH set up")
+			return True
+		else:
+			self.logger("host NOT added to known hosts", "SSH set up")
+			return False
+
+
+		
 	def organise_file_transfer(self, project, fastq_files_list):
 		"""
 		Fastqs have been downloaded and integrity checked.
@@ -263,14 +308,18 @@ class Archerdx():
 		file_list = fastq_files_list
 		# assume all fastqs were transferred ok
 		all_fastqs_transferred_ok=True
+		# list of runnumbers
+		runnumber_list = []
 		# for each fastq
 		for fastq in file_list:
 			# ignore undertermined
 			if not fastq.startswith("Undetermined"):
 				# capture run name to create a run folder on archer platform (sample names are in format ADX001_01_ID1_ID2_etc)
 				# The library/run number is always the first item and used to identify the runs
-				# TODO potential bug = if there are multiple libraries on the same run, they will be put into different folders, but the completed file command (below) is only run once.
+				# The lab want these grouped by library/run number but if different libraries are sequenced together they will go into different folders.
+				# therefore create a list of library/run number and loop through this to ensure they are all processed
 				runnumber = "ADX"+fastq.split("ADX")[1].split("_")[0]
+				runnumber_list.append(runnumber)
 				# file structure is maintained from dnanexus project - recreate this path
 				file_to_transfer = os.path.join(config.download_location, project[1].replace("003_","").replace("002_",""),config.fastq_folder_path, fastq)
 				# add file to be transfered to the logfile
@@ -282,16 +331,17 @@ class Archerdx():
 					self.logger("%s fastq file not transferred successfully" % fastq, "Archer file transfer")
 		# if all transferred ok
 		if all_fastqs_transferred_ok:
-			# create and move completed file to start analysis
-			file_path=os.path.join(self.create_completed_file(runnumber))
-			if file_path:
-				if self.transfer_file_to_server(file_path, runnumber, complete_file=True):
-					self.logger("complete file created for %s" % project[1], "Archer file transfer")
-					return True
-				else:
-					# Rapid7 alert set:
-					self.logger("WARNING: complete file NOT created for %s. Run will not be processed" % project[1], "Archer file transfer")
-					return False
+			for runnumber in set(runnumber_list):
+				# create and move completed file to start analysis
+				file_path=os.path.join(self.create_completed_file(runnumber))
+				if file_path:
+					if self.transfer_file_to_server(file_path, runnumber, complete_file=True):
+						self.logger("complete file created for runnumber %s in %s" % (runnumber,project[1]), "Archer file transfer")
+						return True
+					else:
+						# Rapid7 alert set:
+						self.logger("WARNING: complete file NOT created for runnumber %s in %s. Run will not be processed" % (runnumber,project[1]), "Archer file transfer")
+						return False
 
 	def transfer_file_to_server(self,file,runnumber, complete_file=False):
 		"""
@@ -328,7 +378,7 @@ class Archerdx():
 			cmd = "archer_pw=$(<%s); sshpass -p $archer_pw rsync %s s_archerupload@grpvgaa01.viapath.local:%s;echo $?" % (
 				config.path_to_archerdx_pw, file, os.path.join(config.path_to_watch_folder, file.split("/")[-1]))
 		# capture stdout and look for exit code
-		self.logger(cmd,"Archer file transfer")
+		self.logger(cmd.replace("\t",""),"Archer file transfer")
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out.rstrip(), "0"):
 			return runnumber
@@ -451,19 +501,22 @@ class Archerdx():
 		# call list_projects to look for any new ADX projects in DNA nexus. 
 		# For each identified project check fastq files are closed (return True), return a lift of fastq files and call subsequent functions
 		for project in self.list_projects():
-			fastq_files_closed, fastq_files_list  = self.check_all_files_closed(project)
-			# check all fastq files in project are closed, and that project not already actioned
-			if not self.check_if_already_actioned(project) and fastq_files_closed:
-				# generate a filtered manifest file for the project
-				if self.create_filtered_manifest_file(project):
-					# download the fastq files for the project
-					if self.download_using_manifest_file(project):
-						# transfer the fastq files to the Archer Analysis
-						if self.organise_file_transfer(project, fastq_files_list):
-							# delete the copy of the fastq files from the genomics server
-							if self.cleanup(project):
-								# create the file to prevent the project being processed again
-								self.create_file_to_stop_subsequent_processing(project)
+			# check project not already actioned
+			if not self.check_if_already_actioned(project):
+				fastq_files_closed, fastq_files_list  = self.check_all_files_closed(project)
+				# check all fastq files in project are closed
+				if fastq_files_closed:
+					# generate a filtered manifest file for the project
+					if self.create_filtered_manifest_file(project):
+						# download the fastq files for the project
+						if self.download_using_manifest_file(project):
+							if self.set_up_ssh_known_hosts():
+								# transfer the fastq files to the Archer Analysis
+								if self.organise_file_transfer(project, fastq_files_list):
+									# delete the copy of the fastq files from the genomics server
+									if self.cleanup(project):
+										# create the file to prevent the project being processed again
+										self.create_file_to_stop_subsequent_processing(project)
 
 if __name__ == "__main__":
 	archer = Archerdx()

@@ -503,7 +503,7 @@ class Archerdx():
 			if not self.check_if_already_actioned(project):
 				fastq_files_closed, fastq_files_list  = self.check_all_files_closed(project)
 				# check all fastq files in project are closed
-			 	if fastq_files_closed:
+				if fastq_files_closed:
 					# generate a filtered manifest file for the project
 					if self.create_filtered_manifest_file(project):
 						# download the fastq files for the project

@@ -316,7 +316,8 @@ class Archerdx():
 			if not fastq.startswith("Undetermined"):
 				# capture run name to create a run folder on archer platform (sample names are in format ADX001_01_ID1_ID2_etc)
 				# The library/run number is always the first item and used to identify the runs
-				# TODO potential bug = if there are multiple libraries on the same run, they will be put into different folders, but the completed file command (below) is only run once.
+				# The lab want these grouped by library/run number but if different libraries are sequenced together they will go into different folders.
+				# therefore create a list of library/run number and loop through this to ensure they are all processed
 				runnumber = "ADX"+fastq.split("ADX")[1].split("_")[0]
 				runnumber_list.append(runnumber)
 				# file structure is maintained from dnanexus project - recreate this path

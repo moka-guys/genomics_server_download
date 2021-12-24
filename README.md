@@ -33,7 +33,7 @@ In v1.3 these scripts were modified so they could be run from within a docker co
 `sudo docker run --rm  -v /usr/local/src/mokaguys/logfiles:/mokaguys/logfiles -v /usr/local/src/mokaguys/dx_downloads:/mokaguys/dx_downloads -v /usr/local/src/mokaguys/.dnanexus_auth_token:/mokaguys/.dnanexus_auth_token -v /usr/local/src/mokaguys/.archerVM_pw:/mokaguys/.archerVM_pw  genomics_server_download:latest`
 (replacing the tag `latest` as required).
 
-The scripts should still run outside of docker but this has not been tested.
+The scripts should still run outside of docker but there is one issue when running with testing == True. As described below, when running in testing mode files within the logfiles/manifest_files are deleted. However, if these were created by docker these files are owned by root so the rm command will fail and the script will hang (we cannot run the python script as root). Therefore need to chown the user on these files.
 ## Running the script
 The Docker image is run hourly as a CRON job (the python script doesn't work in cron due to an issue with the pythonpath run by CRON). 
 

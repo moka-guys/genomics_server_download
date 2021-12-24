@@ -140,6 +140,7 @@ class Archerdx():
 		# this causes the integrity checking step to fail.
 		# therefore we need to delete the contents of the manifest folder for this project
 		if config.testing:
+			self.logger("Testing run - if script is failing at this point you need to `chown $username logfiles/manifest_files/%s`" % project[0], "Test run step")
 			cmd = "rm %s; echo $?" % (os.path.join(config.manifest_folder,"%s*" % (project[0])))
 			out, err = self.execute_subprocess_command(cmd)
 			if self.success_in_stdout(out, "0"):

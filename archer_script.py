@@ -255,7 +255,7 @@ class Archerdx():
 		out, err = self.execute_subprocess_command(cmd)
 		# if inspect download doesn't retrun any errors
 		if not self.errors_in_stderr(err, "inspect") and self.success_in_stdout(out,"Integrity check for regular files complete."):
-			self.logger("Integrity check for %s Archer fastq dowload complete." % project[1], "Archer Inspect Download")
+			self.logger("Integrity check for %s Archer fastq download complete." % project[1], "Archer Inspect Download")
 			return True
 		else:
 			# add inspect download errors to the logfile
@@ -326,7 +326,7 @@ class Archerdx():
 				if not self.transfer_file_to_server(file_to_transfer,runnumber):
 					# if it wasn't successful 
 					all_fastqs_transferred_ok = False
-					self.logger("%s fastq file not transferred successfully" % fastq, "Archer file transfer")
+					self.logger("WARNING: fastq file not transferred successfully %s" % fastq, "Archer file transfer") # Rapid7 alert set
 		# if all transferred ok
 		if all_fastqs_transferred_ok:
 			for runnumber in set(runnumber_list):
@@ -339,7 +339,7 @@ class Archerdx():
 						# Rapid7 alert set:
 						self.logger("WARNING: complete file NOT created for runnumber %s in %s. Run will not be processed" % (runnumber,project[1]), "Archer file transfer")
 						return False
-		return True
+			return True
 
 	def transfer_file_to_server(self,file,runnumber, complete_file=False):
 		"""

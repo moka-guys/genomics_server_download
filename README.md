@@ -1,4 +1,4 @@
-# genomics_server_download v1.4.0
+# genomics_server_download v1.5.0
 Scripts for downloading files from DNA Nexus to the ArcherDx analysis platform via Genomics server.
 
 Currently only contains scripts to download and transfer fastq files for ArcherDX FusionPlex Pan Solid Tumour NGS runs. Runs are demultiplexed and uploaded to DNA Nexus using the automated scripts. FASTQ files must then be downloaded and transfered to the Archer server in order to be used by the Archer Analysis software.
@@ -20,7 +20,7 @@ The watched folders will set off analyses when a file named analysisid_completed
 
 ## Requirements
 * Python 3.5 (from v1.4.0 onwards)
-* DNA Nexus dxda (v0.5.7)
+* DNA Nexus dxda (v0.5.12)
     * CLI tool to manage the download of large quantities of files from DNAnexus (https://github.com/dnanexus/dxda)
     * Series of scripts used to create and filter a manifest file, download files based on the manifest, then check (inspect) the intergrity of the download
 * rsync

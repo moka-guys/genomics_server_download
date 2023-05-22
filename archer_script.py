@@ -23,11 +23,11 @@ class Archerdx():
 		# if testing use project defined in config file
 		if config.testing:
 			# build command including the source cmd (activate the sdk)
-			cmd = config.source_command+";dx find projects --name=%s --auth-token %s" % (config.testing_project, config.Nexus_API_Key)
+			cmd = "%s;dx find projects --name=%s --auth-token %s" % (config.source_command, config.testing_project, config.Nexus_API_Key)
 		else:	
 			# build command including the source cmd (activate the sdk)
-			cmd = config.source_command+";dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.Nexus_API_Key)
-		self.script_logfile.write("Command to list projects: '%s'\n" % (cmd))
+			cmd = "%s;dx find projects --created-after=-7d --name=*_ADX* --auth-token %s" % (config.source_command, config.Nexus_API_Key)
+		self.script_logfile.write("\tCommand to list projects: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		# list of projects- loop through to yield the projectid and projectname as "project"
 		for item in out.split("\n"):
@@ -90,11 +90,11 @@ class Archerdx():
 		file_list = []
 		# command to list all fastqs in project
 		cmd = config.source_command+";dx find data --path %s --name '*.fastq.gz' --auth-token %s" % (project[0], config.Nexus_API_Key)
-		self.script_logfile.write("Command to list FASTQ files: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to list FASTQ files: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		# each fastq found is listed along with it's status eg open/closed.
 		# it will be closed when the upload has finished.
-		self.script_logfile.write("Fastq files in Archer project %s:\n" % project[1])
+		self.script_logfile.write("\tFastq files in Archer project %s:\n" % project[1])
 		for line in out.split("\n"):
 			# check if any files are not closed
 			if len(line) >2 and not line.startswith("closed"):
@@ -121,10 +121,10 @@ class Archerdx():
 		"""
 		# --no-projects doesn't require a project to be selected which would otherwise require an additional response.
 		cmd = config.source_command+";dx login --token %s --noprojects --timeout 30m" % (config.Nexus_API_Key)
-		self.script_logfile.write("dx login command: '%s'\n" % (cmd))
+		self.script_logfile.write("\tdx login command: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		# if the login fails, add this to the log
-		self.script_logfile.write("dx login command out: '%s'\n" % (out))
+		self.script_logfile.write("\tdx login command out: '%s'\n" % (out))
 		if err:
 			self.logger("dx login failed. err: '%s'" % (err), "Archer dx login")
 
@@ -144,14 +144,14 @@ class Archerdx():
 		# this causes the integrity checking step to fail.
 		# therefore we need to delete the contents of the manifest folder for this project
 		if config.testing:
-			self.logger("Testing run - if script is failing at this point you need to `chown $username logfiles/manifest_files/%s`" % project[0], "Test run step")
+			self.logger("Testing run - if script is failing at this point you need to `chown $username logfiles/manifest_files/%s`" % project[0], "Archer Test run step")
 			cmd = "rm %s; echo $?" % (os.path.join(config.manifest_folder,"%s*" % (project[0])))
-			self.script_logfile.write("Command to delete manifest files: %s\n" % (cmd))
+			self.script_logfile.write("\tCommand to delete manifest files: %s\n" % (cmd))
 			out, err = self.execute_subprocess_command(cmd)
 			if self.success_in_stdout(out, "0"):
-				self.logger("Testing run - existing manifest files deleted for project %s" % project[0], "Test run step")
+				self.logger("Testing run - existing manifest files deleted for project %s" % project[0], "Archer Test run step")
 			else:
-				self.logger("Testing run - existing manifest files NOT deleted for project %s" % project[0], "Test run step")
+				self.logger("Testing run - existing manifest files NOT deleted for project %s" % project[0], "Archer Test run step")
 
 		manifest_filename = os.path.join(config.manifest_folder,"%s.json.bz2 " % (project[0]))
 		# create cmd for dxda script to create manifest (create_manifest.py)
@@ -161,7 +161,7 @@ class Archerdx():
 			project[0], 
 			manifest_filename
 			)
-		self.script_logfile.write("Command to generate manifest file: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to generate manifest file: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		if not err:
 			self.logger("Unfiltered manifest file created %s" % manifest_filename, "Archer create manifest file")
@@ -194,7 +194,7 @@ class Archerdx():
 			os.path.join(config.manifest_folder, "%s.json.bz2" % (project[0])),
 			filtered_manifest_filename
 			) 
-		self.script_logfile.write("Command to filter manifest file: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to filter manifest file: '%s'\n" % (cmd))
 		# execute filter manifest command
 		out, err = self.execute_subprocess_command(cmd)
 		if not err:
@@ -215,7 +215,7 @@ class Archerdx():
 		Outputs:	Returns True if files downloaded and inspect_download does not return any errors. 
 					fastq files will be saved on server (location in config file)
 		"""
-		self.script_logfile.write("Preparing to download using filtered manifest file\n")
+		self.script_logfile.write("\tPreparing to download using filtered manifest file\n")
 		# command to source the dnanexus sdk and then download using filtered manifest and auth token-
 		# cd to the folder where files will be downloaded, source the dnanexus sdk (dnanexus API key given as last command input);
 		# give location of the dxda scripts, call the download function to download the fastq files using the filtered manifest file
@@ -226,7 +226,7 @@ class Archerdx():
 			config.path_to_dx_download_client, 
 			os.path.join(config.manifest_folder, "%s_filtered.json.bz2" % (project[0])),
 			config.Nexus_API_Key)
-		self.script_logfile.write("Command to download FASTQs using filtered manifest file: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to download FASTQs using filtered manifest file: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		# pass stderr to error checking function which looks for expected error related strings at this stage and stdout to the success checking function
 		if not self.errors_in_stderr(err, "download") and self.success_in_stdout(out,"Download completed successfully"):
@@ -257,7 +257,7 @@ class Archerdx():
 			config.path_to_dx_download_client, 
 			os.path.join(config.manifest_folder, "%s_filtered.json.bz2" % (project[0])),
 			config.Nexus_API_Key)
-		self.script_logfile.write("Command to inspect FASTQ download: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to inspect FASTQ download: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		# if inspect download doesn't retrun any errors
 		if not self.errors_in_stderr(err, "inspect") and self.success_in_stdout(out,"Integrity check for regular files complete."):
@@ -283,7 +283,7 @@ class Archerdx():
 		cmd="mkdir -p ~/.ssh; touch ~./ssh/known_hosts;\
 			if [ -z $(ssh-keygen -F grpvgaa01.viapath.local) ]; then \
 				ssh-keyscan -H grpvgaa01.viapath.local >> ~/.ssh/known_hosts; fi; ssh-keygen -F grpvgaa01.viapath.local"
-		self.script_logfile.write("Command to set up ssh known hosts: '%s'\n" % (cmd.replace("\t","")))
+		self.script_logfile.write("\tCommand to set up ssh known hosts: '%s'\n" % (cmd.replace("\t","")))
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out, "Host grpvgaa01.viapath.local found"):
 			self.logger("host added to known hosts ok", "SSH set up")
@@ -308,7 +308,7 @@ class Archerdx():
 					fastq_files_list - list of fastq files generated by check_all_files_closed() (as file_list)
 		Outputs:	Returns True if all files transferred correctly and complete file created
 		"""
-		self.script_logfile.write("Preparing to transfer files for project %s to Archer Analysis platform" % project[1])
+		self.script_logfile.write("\tPreparing to transfer files for project %s to Archer Analysis platform" % project[1])
 		# fastq list is given as an input
 		file_list = fastq_files_list		
 		# assume all fastqs were transferred ok
@@ -329,7 +329,7 @@ class Archerdx():
 				file_to_transfer = os.path.join(config.download_location, project[1].replace("003_","").replace("002_",""),config.fastq_folder_path, fastq)
 				# add file to be transfered to the logfile
 				self.logger("file to transfer %s" % file_to_transfer.replace("\t",""), "Archer file transfer")
-				self.script_logfile.write("file to transfer %s \n" % file_to_transfer.replace("\t",""))
+				self.script_logfile.write("\tfile to transfer %s \n" % file_to_transfer.replace("\t",""))
 				# call transfer_file_to_server() to transfer fastq to server
 				if not self.transfer_file_to_server(file_to_transfer,runnumber):
 					# if it wasn't successful 
@@ -384,8 +384,9 @@ class Archerdx():
 			cmd = "archer_pw=$(<%s); sshpass -p $archer_pw rsync %s s_archerupload@grpvgaa01.viapath.local:%s;echo $?" % (
 				config.path_to_archerdx_pw, file, os.path.join(config.path_to_watch_folder, file.split("/")[-1]))
 		# capture stdout and look for exit code
-		self.script_logfile.write("Command to transfer file to Archer: '%s'\n" % cmd.replace("\t",""))
+		self.script_logfile.write("\tCommand to transfer file to Archer: '%s'\n" % cmd.replace("\t",""))
 		out, err = self.execute_subprocess_command(cmd)
+		print(err)
 		if self.success_in_stdout(out.rstrip(), "0"):
 			return runnumber
 		return False
@@ -405,7 +406,7 @@ class Archerdx():
 		else:
 			file_path=os.path.join(config.download_location,run_number+".completed")
 		cmd = "touch %s;echo $?" % (file_path)
-		self.script_logfile.write("Command to create .completed file: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to create .completed file: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out, "0"):
 			return file_path
@@ -421,7 +422,7 @@ class Archerdx():
 		path_to_downloaded_files = os.path.join(config.download_location, project[1].replace("003_","").replace("002_",""))
 		# command to delete the downloaded fastq files
 		cmd = "rm -r %s; echo $?" % (path_to_downloaded_files)
-		self.script_logfile.write("Delete project %s downloaded files (%s). cmd = %s" % (project[1], path_to_downloaded_files, cmd))
+		self.script_logfile.write("\tDelete project %s downloaded files (%s). cmd = %s" % (project[1], path_to_downloaded_files, cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out, "0"):
 			self.logger("Runfolder for project %s deleted successfully from genomics server" % project[1], "Archer Cleanup")
@@ -443,7 +444,7 @@ class Archerdx():
 		"""
 		file_path=os.path.join(config.processed_runs_folder,project[1]+".txt")
 		cmd = "touch %s;echo $?" % (file_path)
-		self.script_logfile.write("Command to create file to stop subsequent processing: '%s'\n" % (cmd))
+		self.script_logfile.write("\tCommand to create file to stop subsequent processing: '%s'\n" % (cmd))
 		out, err = self.execute_subprocess_command(cmd)
 		if self.success_in_stdout(out, "0"):
 			with open(file_path,'w') as logfile_to_write:
@@ -503,9 +504,11 @@ class Archerdx():
 		if subprocess.call([log], shell=True) == 0:
 			# If the log command produced no errors, record the log command string to the script logfile.
 			self.script_logfile.write(time + " : " + tool + ": " + message + "\n")
+			print("%s : %s" % (tool,message))
 		# Else record failure to write to system log to the script log file
 		else:
-			self.script_logfile.write(time + " : Failed to write log to /usr/bin/logger\n" + log + "\n")
+			self.script_logfile.write(time + " : Failed to write log to /var/log/syslog\n" + log + "\n")
+			print("Failed to write log to /var/log/syslog %s : %s" % (tool,message))
 
 	def go(self):
 		"""

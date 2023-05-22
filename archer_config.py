@@ -1,6 +1,6 @@
 import os
 
-testing = True
+testing = False
 testing_project = "003_221215_NB552085_0225_AH2J2JAFX5_ADX99999" # project-GKQkYg00bKYY0gZjFPX6BYx3
 docker = True
 # =====location of input/output files=====

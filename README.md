@@ -30,7 +30,7 @@ The watched folders will set off analyses when a file named analysisid_completed
 
 ## Docker
 From v1.3 these scripts were modified so they could be run from within a docker container. This can be run using the command 
-`sudo docker run --rm  -v /usr/local/src/mokaguys/logfiles:/mokaguys/logfiles -v /usr/local/src/mokaguys/dx_downloads:/mokaguys/dx_downloads -v /usr/local/src/mokaguys/.dnanexus_auth_token:/mokaguys/.dnanexus_auth_token -v /usr/local/src/mokaguys/.archerVM_pw:/mokaguys/.archerVM_pw  genomics_server_download:latest`
+`sudo docker run --rm --log-driver syslog -v /var/log:/var/log -v /usr/local/src/mokaguys/logfiles:/mokaguys/logfiles -v /usr/local/src/mokaguys/dx_downloads:/mokaguys/dx_downloads -v /usr/local/src/mokaguys/.dnanexus_auth_token:/mokaguys/.dnanexus_auth_token -v /usr/local/src/mokaguys/.archerVM_pw:/mokaguys/.archerVM_pw genomics_server_download:latest`
 (replacing the tag `latest` as required).
 
 The scripts should still run outside of docker (set docker=False in archer_config.py) but there is one issue when running with testing == True. As described below, when running in testing mode files within the logfiles/manifest_files are deleted. However, if these were created by docker these files are owned by root so the rm command will fail and the script will hang (we cannot run the python script as root). Therefore need to chown the user on these files.

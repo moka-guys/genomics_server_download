@@ -1,7 +1,7 @@
 import os
 
 testing = False
-testing_project = "003_221215_NB552085_0225_AH2J2JAFX5_ADX99999"
+testing_project = "003_221215_NB552085_0225_AH2J2JAFX5_ADX99999" # project-GKQkYg00bKYY0gZjFPX6BYx3
 docker = True
 # =====location of input/output files=====
 # root of folder that contains the apps, automate_demultiplexing_logfiles and
@@ -34,6 +34,6 @@ if docker:
 else:
     source_command = " source %s" % (os.path.join(document_root,"apps","dx-toolkit","environment"))
 
-path_to_manifest_script = os.path.join(resources_root,"resources","dxda_0.5.7","dxda","scripts","create_manifest.py")
-path_to_filter_manifest_script = os.path.join(resources_root,"resources","dxda_0.5.7","dxda","scripts","filter_manifest.py")
-path_to_dx_download_client = os.path.join(resources_root,"resources","dxda_0.5.7","dx-download-agent-linux")
+path_to_manifest_script = os.path.join(resources_root,"resources","dxda_0.5.12","dxda","scripts","create_manifest.py")
+path_to_filter_manifest_script = os.path.join(resources_root,"resources","dxda_0.5.12","dxda","scripts","filter_manifest.py")
+path_to_dx_download_client = os.path.join(resources_root,"resources","dxda_0.5.12","dx-download-agent-linux")

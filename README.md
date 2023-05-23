@@ -1,4 +1,4 @@
-# genomics_server_download v1.4.0
+# genomics_server_download v1.5.0
 Scripts for downloading files from DNA Nexus to the ArcherDx analysis platform via Genomics server.
 
 Currently only contains scripts to download and transfer fastq files for ArcherDX FusionPlex Pan Solid Tumour NGS runs. Runs are demultiplexed and uploaded to DNA Nexus using the automated scripts. FASTQ files must then be downloaded and transfered to the Archer server in order to be used by the Archer Analysis software.
@@ -20,7 +20,7 @@ The watched folders will set off analyses when a file named analysisid_completed
 
 ## Requirements
 * Python 3.5 (from v1.4.0 onwards)
-* DNA Nexus dxda (v0.5.7)
+* DNA Nexus dxda (v0.5.12)
     * CLI tool to manage the download of large quantities of files from DNAnexus (https://github.com/dnanexus/dxda)
     * Series of scripts used to create and filter a manifest file, download files based on the manifest, then check (inspect) the intergrity of the download
 * rsync
@@ -30,7 +30,7 @@ The watched folders will set off analyses when a file named analysisid_completed
 
 ## Docker
 From v1.3 these scripts were modified so they could be run from within a docker container. This can be run using the command 
-`sudo docker run --rm  -v /usr/local/src/mokaguys/logfiles:/mokaguys/logfiles -v /usr/local/src/mokaguys/dx_downloads:/mokaguys/dx_downloads -v /usr/local/src/mokaguys/.dnanexus_auth_token:/mokaguys/.dnanexus_auth_token -v /usr/local/src/mokaguys/.archerVM_pw:/mokaguys/.archerVM_pw  genomics_server_download:latest`
+`sudo docker run --rm --log-driver syslog -v /var/log:/var/log -v /usr/local/src/mokaguys/logfiles:/mokaguys/logfiles -v /usr/local/src/mokaguys/dx_downloads:/mokaguys/dx_downloads -v /usr/local/src/mokaguys/.dnanexus_auth_token:/mokaguys/.dnanexus_auth_token -v /usr/local/src/mokaguys/.archerVM_pw:/mokaguys/.archerVM_pw genomics_server_download:latest`
 (replacing the tag `latest` as required).
 
 The scripts should still run outside of docker (set docker=False in archer_config.py) but there is one issue when running with testing == True. As described below, when running in testing mode files within the logfiles/manifest_files are deleted. However, if these were created by docker these files are owned by root so the rm command will fail and the script will hang (we cannot run the python script as root). Therefore need to chown the user on these files.
